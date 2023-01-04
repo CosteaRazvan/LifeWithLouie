@@ -8,39 +8,8 @@ import glob
 class Preprocess():
     def __init__(self, params:Parameters):
         self.params = params
-    
-    def image_resize(image, width = None, height = None, inter = cv.INTER_AREA):
-        # initialize the dimensions of the image to be resized and
-        # grab the image size
-        dim = None
-        (h, w) = image.shape[:2]
 
-        # if both the width and height are None, then return the
-        # original image
-        if width is None and height is None:
-            return image
-
-        # check to see if the width is None
-        if width is None:
-            # calculate the ratio of the height and construct the
-            # dimensions
-            r = height / float(h)
-            dim = (int(w * r), height)
-
-        # otherwise, the height is None
-        else:
-            # calculate the ratio of the width and construct the
-            # dimensions
-            r = width / float(w)
-            dim = (width, int(h * r))
-
-        # resize the image
-        resized = cv.resize(image, dim, interpolation = inter)
-
-        # return the resized image
-        return resized
-
-    def resizeAndPad(img, size, padColor=0):
+    def resizeAndPad(self, img, size, padColor=0):
         h, w = img.shape[:2]
         sh, sw = size
 
@@ -71,23 +40,16 @@ class Preprocess():
             pad_left, pad_right, pad_top, pad_bot = 0, 0, 0, 0
 
         # set pad color
-        if len(img.shape) == 3 and not isinstance(padColor, (list, tuple, 
-            np.ndarray)): # color image but only one color provided
+        if len(img.shape) == 3 and not isinstance(padColor, (list, tuple, np.ndarray)): # color image but only one color provided
             padColor = [padColor]*3
 
-            # scale and pad
-            scaled_img = cv.resize(img, (new_w, new_h), interpolation=interp)
-            scaled_img = cv.copyMakeBorder(scaled_img, pad_top, pad_bot, 
-                pad_left, pad_right, borderType=cv.BORDER_CONSTANT,  
-                value=padColor)
-                
+        # scale and pad
+        scaled_img = cv.resize(img, (new_w, new_h), interpolation=interp)
+        scaled_img = cv.copyMakeBorder(scaled_img, pad_top, pad_bot, 
+            pad_left, pad_right, borderType=cv.BORDER_CONSTANT,  
+            value=padColor)
+
         return scaled_img
-
-
-
-
-
-
 
     def crop_examples(self):
         n_pos = 0
@@ -97,8 +59,8 @@ class Preprocess():
         for char in ['andy', 'louie', 'ora', 'tommy']:
             print(f'Start {char} cropping')
 
-            dir_path =  os.path.join(self.params.base_dir, f'{char}/')
-            txt_path = os.path.join(self.params.base_dir, f'{char}_annotations.txt')
+            dir_path =  os.path.join(self.params.train_dir, f'{char}/')
+            txt_path = os.path.join(self.params.train_dir, f'{char}_annotations.txt')
 
             f = open(txt_path, 'r')
 
@@ -133,16 +95,18 @@ class Preprocess():
 
                     face = image[val[1]:val[3], val[0]:val[2]]
                     #face = cv.resize(face, (self.params.dim_window, self.params.dim_window))
-                    face = self.image_resize(face, self.params.dim_window, self.params.dim_window)
+                    face = self.resizeAndPad(face, (self.params.dim_window, self.params.dim_window))
 
-                    cv.imwrite(os.path.join(self.params.base_dir, f'{char}_positive/{i}.jpg'), face)
+                    cv.imwrite(os.path.join(self.params.train_dir, f'{char}_positive/{i}.jpg'), face)
+                    print(f'Saved {char} example number {i}')
                     #cv.imwrite(os.path.join(self.parmasdir_pos_examples, f'{n_pos}.jpg'), face)
                     i+=1
                     #n_pos+=1
 
                     if self.params.use_flip_images:
                         fliped_face = cv.flip(face, 1)
-                        cv.imwrite(os.path.join(self.params.base_dir, f'{char}_positive/{i}.jpg'), fliped_face)
+                        cv.imwrite(os.path.join(self.params.train_dir, f'{char}_positive/{i}.jpg'), fliped_face)
+                        print(f'Saved {char} example number {i}')
                         #cv.imwrite(os.path.join(dir_pos_examples, f'{n_pos}.jpg'), fliped_face)
                         i+=1
                         #n_pos+=1
@@ -159,14 +123,16 @@ class Preprocess():
 
                 face = image[val[1]:val[3], val[0]:val[2]]
                 #face = cv.resize(face, (self.params.dim_window, self.params.dim_window))
-                face = self.image_resize(face, self.params.dim_window, self.params.dim_window)
+                face = self.resizeAndPad(face, (self.params.dim_window, self.params.dim_window))
 
                 cv.imwrite(os.path.join(self.params.dir_pos_examples, f'{n_pos}.jpg'), face)
+                print(f'Saved positive example number {n_pos}')
                 n_pos+=1
 
                 if self.params.use_flip_images:
                         fliped_face = cv.flip(face, 1)
                         cv.imwrite(os.path.join(self.params.dir_pos_examples, f'{n_pos}.jpg'), fliped_face)
+                        print(f'Saved positive example number {n_pos}')
                         n_pos+=1
 
                 num_rows = image.shape[0]
