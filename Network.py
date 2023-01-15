@@ -106,6 +106,8 @@ class ResNet(nn.Module):
 
 #     output = model(x).to('cuda')
 #     print(output.shape)
+#     print(output)
+    
 
 
         

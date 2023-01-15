@@ -17,6 +17,7 @@ class Detector:
     def __init__(self, params:Parameters):
         self.params = params
         self.best_model = None
+        self.best_net = None
         self.preprocessing: Preprocess = Preprocess(params)
 
     def get_positive_features(self):
@@ -40,50 +41,8 @@ class Detector:
         positive_descriptors = np.array(positive_descriptors)
         return positive_descriptors
 
-    def get_positive_val_features(self):
-        images_path = os.path.join(self.params.valid_dir, 'data_crop/positive/*.jpg')
-        files = glob.glob(images_path)
-        num_images = len(files)
-        positive_descriptors = []
-
-        print(f'Compute positive descriptors for {num_images} images')
-        for i in range(num_images):
-            print(f'Process positive example number {i}')
-
-            img = cv.imread(files[i])
-            img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
-            features = hog(img_gray, pixels_per_cell=(self.params.dim_hog_cell, self.params.dim_hog_cell),
-                           cells_per_block=(2, 2), feature_vector=True)
-            
-            positive_descriptors.append(features)
-
-        positive_descriptors = np.array(positive_descriptors)
-        return positive_descriptors
-
     def get_negative_features(self):
         images_path = os.path.join(self.params.dir_neg_examples, '*.jpg')
-        files = glob.glob(images_path)
-        num_images = len(files)
-        negative_descriptors = []
-
-        print(f'Compute positive descriptors for {num_images} images')
-        for i in range(num_images):
-            print(f'Process negative example number {i}')
-
-            img = cv.imread(files[i])
-            img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
-            features = hog(img_gray, pixels_per_cell=(self.params.dim_hog_cell, self.params.dim_hog_cell),
-                           cells_per_block=(2, 2), feature_vector=True)
-
-            negative_descriptors.append(features)
-
-        negative_descriptors = np.array(negative_descriptors)
-        return negative_descriptors
-
-    def get_negative_val_features(self):
-        images_path = os.path.join(self.params.valid_dir, 'data_crop/negative/*.jpg')
         files = glob.glob(images_path)
         num_images = len(files)
         negative_descriptors = []
@@ -156,35 +115,6 @@ class Detector:
         plt.savefig(os.path.join(self.params.saved_dir, 'distr_train.eps'))
         plt.show()
 
-    def run_svm(self, X, y):
-        svm_file_name = os.path.join(self.params.saved_dir, 'best_model_%d_%d_%d' %
-                                     (self.params.dim_hog_cell, self.params.number_negative_examples,
-                                      self.params.number_positive_examples))
-
-        if os.path.exists(svm_file_name) == False:
-            return
-
-        model = pickle.load(open(svm_file_name, 'rb'))
-
-        y_hat = model.predict(X)
-        cr = classification_report(y_true=y, y_pred=y_hat)
-        print(cr)
-
-        w = model.coef_.T
-        bias = model.intercept_[0]
-        y_hat = []
-
-        for x in X:
-            score = np.dot(x, w)[0] + bias
-            if score > 0:
-                y_hat.append(1)
-            else:
-                y_hat.append(0)
-
-        acc = accuracy_score(y, y_hat)
-        print(acc)
-
-        
     def intersection_over_union(self, bbox_a, bbox_b):
         x_a = max(bbox_a[0], bbox_b[0])
         y_a = max(bbox_a[1], bbox_b[1])
@@ -236,8 +166,7 @@ class Detector:
                                 is_maximal[j] = False
         return sorted_image_detections[is_maximal], sorted_scores[is_maximal]
     
-    def run(self):
-        test_images_path = os.path.join(self.params.dir_valid_images, '*.jpg')
+    def run(self, test_images_path):
         test_files = sorted(glob.glob(test_images_path))
         detections = None  
         scores = np.array([])  
@@ -379,3 +308,77 @@ class Detector:
         plt.title('Average precision %.3f' % average_precision)
         plt.savefig(os.path.join(self.params.saved_dir, 'precizie_medie.eps'))
         plt.show()
+
+## Utility funtions for testing in the development process
+    def get_positive_val_features(self):
+        images_path = os.path.join(self.params.valid_dir, 'data_crop/positive/*.jpg')
+        files = glob.glob(images_path)
+        num_images = len(files)
+        positive_descriptors = []
+
+        print(f'Compute positive descriptors for {num_images} images')
+        for i in range(num_images):
+            print(f'Process positive example number {i}')
+
+            img = cv.imread(files[i])
+            img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+            features = hog(img_gray, pixels_per_cell=(self.params.dim_hog_cell, self.params.dim_hog_cell),
+                           cells_per_block=(2, 2), feature_vector=True)
+            
+            positive_descriptors.append(features)
+
+        positive_descriptors = np.array(positive_descriptors)
+        return positive_descriptors
+
+    def get_negative_val_features(self):
+        images_path = os.path.join(self.params.valid_dir, 'data_crop/negative/*.jpg')
+        files = glob.glob(images_path)
+        num_images = len(files)
+        negative_descriptors = []
+
+        print(f'Compute positive descriptors for {num_images} images')
+        for i in range(num_images):
+            print(f'Process negative example number {i}')
+
+            img = cv.imread(files[i])
+            img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+            features = hog(img_gray, pixels_per_cell=(self.params.dim_hog_cell, self.params.dim_hog_cell),
+                           cells_per_block=(2, 2), feature_vector=True)
+
+            negative_descriptors.append(features)
+
+        negative_descriptors = np.array(negative_descriptors)
+        return negative_descriptors        
+
+    def run_svm(self, X, y):
+        svm_file_name = os.path.join(self.params.saved_dir, 'best_model_%d_%d_%d' %
+                                     (self.params.dim_hog_cell, self.params.number_negative_examples,
+                                      self.params.number_positive_examples))
+
+        if os.path.exists(svm_file_name) == False:
+            return
+
+        model = pickle.load(open(svm_file_name, 'rb'))
+
+        print(model.get_params)
+
+        # y_hat = model.predict(X)
+        # cr = classification_report(y_true=y, y_pred=y_hat)
+        # print(cr)
+
+        # w = model.coef_.T
+        # bias = model.intercept_[0]
+        # y_hat = []
+
+        # for x in X:
+        #     score = np.dot(x, w)[0] + bias
+        #     if score > 0:
+        #         y_hat.append(1)
+        #     else:
+        #         y_hat.append(0)
+
+        # acc = accuracy_score(y, y_hat)
+        # print(acc)
+    
