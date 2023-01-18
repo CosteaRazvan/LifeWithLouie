@@ -131,16 +131,6 @@ class Detector:
         return iou
 
     def non_maximal_suppression(self, image_detections, image_scores, image_size):
-        """
-        Detectiile cu scor mare suprima detectiile ce se suprapun cu acestea dar au scor mai mic.
-        Detectiile se pot suprapune partial, dar centrul unei detectii nu poate
-        fi in interiorul celeilalte detectii.
-        :param image_detections:  numpy array de dimensiune NX4, unde N este numarul de detectii.
-        :param image_scores: numpy array de dimensiune N
-        :param image_size: tuplu, dimensiunea imaginii
-        :return: image_detections si image_scores care sunt maximale.
-        """
-
         # xmin, ymin, xmax, ymax
         x_out_of_bounds = np.where(image_detections[:, 2] > image_size[1])[0]
         y_out_of_bounds = np.where(image_detections[:, 3] > image_size[0])[0]
@@ -154,11 +144,11 @@ class Detector:
         is_maximal = np.ones(len(image_detections)).astype(bool)
         iou_threshold = 0.3
         for i in range(len(sorted_image_detections) - 1):
-            if is_maximal[i] == True:  # don't change to 'is True' because is a numpy True and is not a python True :)
+            if is_maximal[i] == True:  
                 for j in range(i + 1, len(sorted_image_detections)):
-                    if is_maximal[j] == True:  # don't change to 'is True' because is a numpy True and is not a python True :)
+                    if is_maximal[j] == True:  
                         if self.intersection_over_union(sorted_image_detections[i],sorted_image_detections[j]) > iou_threshold:is_maximal[j] = False
-                        else:  # verificam daca centrul detectiei este in mijlocul detectiei cu scor mai mare
+                        else:  
                             c_x = (sorted_image_detections[j][0] + sorted_image_detections[j][2]) / 2
                             c_y = (sorted_image_detections[j][1] + sorted_image_detections[j][3]) / 2
                             if sorted_image_detections[i][0] <= c_x <= sorted_image_detections[i][2] and \

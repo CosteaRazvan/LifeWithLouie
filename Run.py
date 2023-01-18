@@ -1,7 +1,6 @@
 from Parameters import *
 from PreprocessingData import *
 from Detector import *
-from Visualize import *
 from Recognizer import *
 
 params: Parameters = Parameters() 
@@ -59,31 +58,29 @@ train_data = np.concatenate((np.squeeze(positive_features), np.squeeze(negative_
 train_labels = np.concatenate((np.ones(params.number_positive_examples), np.zeros(negative_features.shape[0])))
 detector.train_classifier(train_data, train_labels)
 
-detector.run_svm(None, None)
-
 # Run on test data
-# test_images_path = ''
-# valid_images_path = os.path.join(params.dir_valid_images, '*.jpg')
-# detections, scores, file_names = detector.run(test_images_path)
+test_images_path = 'path/to/test/image/dir/'
+valid_images_path = os.path.join(params.dir_valid_images, '*.jpg')
+detections, scores, file_names = detector.run(valid_images_path)
 
-# detection_path_task_1 = os.path.join(params.sol_dir, 'task1/detections_all_faces.npy')
-# scores_path_task_1 = os.path.join(params.sol_dir, 'task1/scores_all_faces.npy')
-# file_names_path_task_1 = os.path.join(params.sol_dir, 'task1/file_names_all_faces.npy')
+detection_path_task_1 = os.path.join(params.sol_dir, 'task1/detections_all_faces.npy')
+scores_path_task_1 = os.path.join(params.sol_dir, 'task1/scores_all_faces.npy')
+file_names_path_task_1 = os.path.join(params.sol_dir, 'task1/file_names_all_faces.npy')
 
-# np.save(detection_path_task_1, detections)
-# np.save(scores_path_task_1, scores)
-# np.save(file_names_path_task_1, file_names)
+np.save(detection_path_task_1, detections)
+np.save(scores_path_task_1, scores)
+np.save(file_names_path_task_1, file_names)
 
 # ############################Task2####################################
 
-# recognizer: Recognizer = Recognizer(params)
-# batch_size = 32
+recognizer: Recognizer = Recognizer(params)
+batch_size = 32
 
-# # Load the data
-# train_loader, valid_loader = preprocess.get_data_loaders(batch_size=batch_size)
+# Load the data
+train_loader, valid_loader = preprocess.get_data_loaders(batch_size=batch_size)
 
-# # Train the network
-# recognizer.train(train_loader, valid_loader, batch_size)
+# Train the network
+recognizer.train(train_loader, valid_loader, batch_size)
 
-# # Run on test data
-# recognizer.run()
+# Run on test data
+recognizer.run()

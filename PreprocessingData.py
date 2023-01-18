@@ -20,14 +20,6 @@ class Preprocess():
         num_negative_per_image = self.params.number_negative_examples // self.params.number_positive_examples
 
         if self.params.use_flip_images: num_negative_per_image +=1
-
-        encoding = {
-            'andy': 0,
-            'louie': 1,
-            'ora': 2,
-            'tommy': 3
-        }
-        labels = ''
         
         for char in ['andy', 'louie', 'ora', 'tommy']:
             print(f'Start {char} cropping')
@@ -53,35 +45,13 @@ class Preprocess():
             f.close()
 
             # Char examples
-            # i = 0
-            # for (key, val) in coords.items():
-            #     if len(val) > 0:
-            #         image = cv.imread(dir_path + key)
-
-            #         face = image[val[1]:val[3], val[0]:val[2]]
-            #         face = cv.resize(face, (224, 224))
-
-            #         file_name = f'characters/{char}_{i}.jpg'
-            #         cv.imwrite(os.path.join(self.params.train_dir, file_name), face)
-            #         print(f'Saved {char} example number {i}')
-            #         i+=1
-            #         labels += f'{char}_{i}.jpg,{encoding[char]}\n'
-
-
-            #         if self.params.use_flip_images:
-            #             fliped_face = cv.flip(face, 1)
-            #             file_name = f'characters/{char}_{i}.jpg'
-            #             cv.imwrite(os.path.join(self.params.train_dir, file_name), fliped_face)
-            #             print(f'Saved {char} example number {i}')
-            #             i+=1
-            #             labels += f'{char}_{i}.jpg,{encoding[char]}\n'
             i = 0
             for (key, val) in coords.items():
                 if len(val) > 0:
                     image = cv.imread(dir_path + key)
 
                     face = image[val[1]:val[3], val[0]:val[2]]
-                    face = cv.resize(face, (224, 224))
+                    #face = cv.resize(face, (224, 224))
 
                     cv.imwrite(os.path.join(self.params.train_dir, f'task2_cropped/{char}/{i}.jpg'), face)
                     print(f'Saved {char} example number {i}')
@@ -95,63 +65,58 @@ class Preprocess():
                         
 
             # Positive and negative examples
-            # f = open(txt_path, 'r')
+            f = open(txt_path, 'r')
 
-            # for line in f:
-            #     words = line.split(' ')
+            for line in f:
+                words = line.split(' ')
 
-            #     image = cv.imread(dir_path + words[0])
+                image = cv.imread(dir_path + words[0])
 
-            #     val = [int(words[1]), int(words[2]), int(words[3]), int(words[4])]
+                val = [int(words[1]), int(words[2]), int(words[3]), int(words[4])]
 
-            #     face = image[val[1]:val[3], val[0]:val[2]]
-            #     face = cv.resize(face, (self.params.dim_window, self.params.dim_window))
-            #     #face = self.resizeAndPad(face, (self.params.dim_window, self.params.dim_window))
+                face = image[val[1]:val[3], val[0]:val[2]]
+                face = cv.resize(face, (self.params.dim_window, self.params.dim_window))
 
-            #     cv.imwrite(os.path.join(self.params.dir_pos_examples, f'{n_pos}.jpg'), face)
-            #     print(f'Saved positive example number {n_pos}')
-            #     n_pos+=1
+                cv.imwrite(os.path.join(self.params.dir_pos_examples, f'{n_pos}.jpg'), face)
+                print(f'Saved positive example number {n_pos}')
+                n_pos+=1
 
-            #     if self.params.use_flip_images:
-            #             fliped_face = cv.flip(face, 1)
-            #             cv.imwrite(os.path.join(self.params.dir_pos_examples, f'{n_pos}.jpg'), fliped_face)
-            #             print(f'Saved positive example number {n_pos}')
-            #             n_pos+=1
+                if self.params.use_flip_images:
+                        fliped_face = cv.flip(face, 1)
+                        cv.imwrite(os.path.join(self.params.dir_pos_examples, f'{n_pos}.jpg'), fliped_face)
+                        print(f'Saved positive example number {n_pos}')
+                        n_pos+=1
 
-            #     num_rows = image.shape[0]
-            #     num_cols = image.shape[1]
+                num_rows = image.shape[0]
+                num_cols = image.shape[1]
 
-            #     X, Y = [], []
-            #     x_high = num_cols - self.params.dim_window
-            #     y_high = num_rows - self.params.dim_window
+                X, Y = [], []
+                x_high = num_cols - self.params.dim_window
+                y_high = num_rows - self.params.dim_window
 
-            #     for k in range(num_negative_per_image):
-            #         x = np.random.randint(low=0, high=x_high)
-            #         while x >= val[0] and x <= val[2]:
-            #             x = np.random.randint(low=0, high=x_high)
+                for k in range(num_negative_per_image):
+                    x = np.random.randint(low=0, high=x_high)
+                    while x >= val[0] and x <= val[2]:
+                        x = np.random.randint(low=0, high=x_high)
 
-            #         y = np.random.randint(low=0, high=y_high)
-            #         while y >= val[1] and y <= val[3]:
-            #             y = np.random.randint(low=0, high=y_high)
+                    y = np.random.randint(low=0, high=y_high)
+                    while y >= val[1] and y <= val[3]:
+                        y = np.random.randint(low=0, high=y_high)
                     
-            #         X.append(x)
-            #         Y.append(y)
+                    X.append(x)
+                    Y.append(y)
                 
-            #     for idx in range(len(Y)):
-            #         patch = image[Y[idx]: Y[idx] + self.params.dim_window, X[idx]: X[idx] + self.params.dim_window]
+                for idx in range(len(Y)):
+                    patch = image[Y[idx]: Y[idx] + self.params.dim_window, X[idx]: X[idx] + self.params.dim_window]
 
-            #         cv.imwrite(os.path.join(self.params.dir_neg_examples, f'{n_neg}.jpg'), patch)
-            #         print(f'Saved negative example number {n_neg}')
-            #         n_neg+=1
+                    cv.imwrite(os.path.join(self.params.dir_neg_examples, f'{n_neg}.jpg'), patch)
+                    print(f'Saved negative example number {n_neg}')
+                    n_neg+=1
 
-            # f.close()
+            f.close()
 
         print(f'Number of positive examples: {n_pos}')
         print(f'Number of negative examples: {n_neg}')
-
-        labels_file = open(os.path.join(self.params.train_dir, 'labels.csv'), "w")
-        labels_file.write(labels)
-        labels_file.close()
 
     def crop_valid_data(self):
         txt_path = os.path.join(self.params.valid_dir, 'task1_gt_validare.txt')
@@ -214,8 +179,9 @@ class Preprocess():
                 i+=1
 
     def get_data_loaders(self, batch_size=32):
-        transformations = transforms.Compose([transforms.ToTensor(),
-                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        transformations = transforms.Compose([transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BICUBIC),
+                                            transforms.ToTensor(),
+                                            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
         training_data = datasets.ImageFolder(os.path.join(self.params.train_dir, 'task2_cropped'), transformations)
         validation_data = datasets.ImageFolder(os.path.join(self.params.valid_dir, 'task2_cropped'), transformations)
@@ -224,4 +190,5 @@ class Preprocess():
         validation_loader = DataLoader(validation_data, batch_size=batch_size, shuffle=True)
 
         return training_loader, validation_loader
+
        
