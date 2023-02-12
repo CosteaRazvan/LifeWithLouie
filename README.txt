@@ -1,3 +1,5 @@
+Open documentation.pdf for more information!
+
 1. The libraries required to run the project including the full version of each library
 
 Example:
